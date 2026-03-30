@@ -12,3 +12,7 @@ Thumbs.db
 
 # Logs
 *.log
+
+#secrets
+credentials.json
+token.json
