@@ -53,13 +53,21 @@ class AIService:
         """
 
         try:
-            return self.generate_with_model(PRIMARY_MODEL, prompt)
+            raw = self.generate_with_model(PRIMARY_MODEL, prompt)
+
+            cleaned = raw.replace("```json", "").replace("```", "").strip()
+
+            return cleaned
 
         except Exception as primary_error:
             logger.warning("Primary model failed, trying fallback...")
 
             try:
-                return self.generate_with_model(FALLBACK_MODEL, prompt)
+                raw = self.generate_with_model(FALLBACK_MODEL, prompt)
+
+                cleaned = raw.replace("```json", "").replace("```", "").strip()
+
+                return cleaned
 
             except Exception as fallback_error:
                 logger.error(f"AI failed completely: {fallback_error}")
