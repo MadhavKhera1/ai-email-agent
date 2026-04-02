@@ -10,7 +10,10 @@ from app.utils.logger import get_logger
 
 logger = get_logger("GMAIL_CLIENT")
 
-SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
+SCOPES = [
+    'https://www.googleapis.com/auth/gmail.readonly',
+    'https://www.googleapis.com/auth/calendar'
+]
 
 
 class GmailClient:

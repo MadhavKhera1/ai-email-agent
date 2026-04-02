@@ -2,12 +2,16 @@ import json
 from fastapi import FastAPI
 from app.services.gmail_service import GmailService
 from app.services.ai_service import AIService
+from app.services.calendar_service import CalendarService
+
 
 app = FastAPI()
 
 gmail_service = GmailService()
 
 ai_service = AIService()
+
+calendar_service = CalendarService()
 
 
 @app.get("/")
@@ -51,12 +55,23 @@ def process_emails():
                 "error": "Invalid AI response",
                 "details": str(e)
             }
+        event_link = None
+
+        if isinstance(ai_result, dict):
+            if ai_result.get("type") in ["meeting", "interview"]:
+                if ai_result.get("date") and ai_result.get("time"):
+                    event_link = calendar_service.create_event(
+                        ai_result["title"],
+                        ai_result["date"],
+                        ai_result["time"]
+                    )
 
         results.append({
             "id":email["id"],
             "subject":email["subject"],
             "sender":email["sender"],
-            "analysis":ai_result
+            "analysis":ai_result,
+            "event_link":event_link
         })
 
     return{
