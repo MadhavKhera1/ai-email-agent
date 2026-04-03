@@ -17,6 +17,37 @@ calendar_service = CalendarService()
 
 init_db()
 
+def run_email_agent():
+    print("Running scheduled email check...")
+
+    emails = gmail_service.fetch_emails()
+
+    for email in emails:
+
+        if is_email_processed(email["id"]):
+            continue
+
+        ai_raw = ai_service.analyze_email(
+            email["subject"],
+            email["body"]
+        )
+
+        try:
+            ai_result = json.loads(ai_raw)
+        except Exception:
+            continue
+
+        if isinstance(ai_result, dict):
+            if ai_result.get("type") in ["meeting", "interview"]:
+                if ai_result.get("date") and ai_result.get("time"):
+                    calendar_service.create_event(
+                        ai_result["title"],
+                        ai_result["date"],
+                        ai_result["time"]
+                    )
+
+        mark_email_processed(email["id"])
+
 @app.get("/")
 def root():
     return {"message": "AI Email Agent Running 🚀"}
