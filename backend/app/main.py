@@ -7,6 +7,7 @@ from app.core.db import init_db
 from app.utils.db_helper import is_email_processed, mark_email_processed
 from contextlib import asynccontextmanager
 from apscheduler.schedulers.background import BackgroundScheduler
+from fastapi import Request
 
 gmail_service = GmailService()
 
@@ -69,9 +70,9 @@ def run_email_agent():
 
         mark_email_processed(email["id"])
 
-@app.get("/")
-def root():
-    return {"message": "AI Email Agent Running "}
+@app.api_route("/", methods=["GET", "HEAD"])
+def root(request: Request):
+    return {"message": "AI Email Agent Running"}
 
 
 @app.get("/emails")
