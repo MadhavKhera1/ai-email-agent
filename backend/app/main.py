@@ -5,9 +5,8 @@ from app.services.ai_service import AIService
 from app.services.calendar_service import CalendarService
 from app.core.db import init_db
 from app.utils.db_helper import is_email_processed, mark_email_processed
-
-
-app = FastAPI()
+from contextlib import asynccontextmanager
+from apscheduler.schedulers.background import BackgroundScheduler
 
 gmail_service = GmailService()
 
@@ -16,6 +15,22 @@ ai_service = AIService()
 calendar_service = CalendarService()
 
 init_db()
+
+scheduler = BackgroundScheduler()
+
+def start_scheduler():
+    scheduler.add_job(run_email_agent, 'interval', minutes=3)
+    scheduler.start()
+
+@asynccontextmanager
+async def lifespan(app):
+    print("Starting scheduler...")
+    start_scheduler()
+    yield
+    print("Shutting down scheduler...")
+    scheduler.shutdown()
+
+app = FastAPI(lifespan=lifespan)
 
 def run_email_agent():
     print("Running scheduled email check...")

@@ -1,6 +1,6 @@
 import os
 import base64
-
+from datetime import datetime, timedelta, timezone
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -66,12 +66,18 @@ class GmailClient:
 
         return body
 
+
     def get_messages(self, max_results=5):
         try:
+            #Always calculate fresh time
+            ten_minutes_ago = (
+                datetime.now(timezone.utc) - timedelta(minutes=10)
+            ).strftime('%Y/%m/%d')
+
             results = self.service.users().messages().list(
                 userId='me',
-                maxResults=max_results,
-                q="category:primary OR category:promotions"
+                q=f"(category:primary OR category:promotions) after:{ten_minutes_ago}",
+                maxResults=max_results
             ).execute()
 
             messages = results.get('messages', [])
