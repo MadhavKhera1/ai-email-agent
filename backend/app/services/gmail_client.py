@@ -70,7 +70,8 @@ class GmailClient:
         try:
             results = self.service.users().messages().list(
                 userId='me',
-                maxResults=max_results
+                maxResults=max_results,
+                q="category:primary OR category:promotions"
             ).execute()
 
             messages = results.get('messages', [])
