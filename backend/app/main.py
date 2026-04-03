@@ -19,7 +19,13 @@ init_db()
 scheduler = BackgroundScheduler()
 
 def start_scheduler():
-    scheduler.add_job(run_email_agent, 'interval', minutes=3)
+    def safe_run():
+        try:
+            run_email_agent()
+        except Exception as e:
+            print(f"Scheduler error: {e}")
+
+    scheduler.add_job(safe_run, "interval", minutes=3)
     scheduler.start()
 
 @asynccontextmanager
@@ -65,7 +71,7 @@ def run_email_agent():
 
 @app.get("/")
 def root():
-    return {"message": "AI Email Agent Running 🚀"}
+    return {"message": "AI Email Agent Running "}
 
 
 @app.get("/emails")
