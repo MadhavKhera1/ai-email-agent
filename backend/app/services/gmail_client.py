@@ -25,31 +25,38 @@ class GmailClient:
     def authenticate(self):
         creds = None
 
-        # Load token if exists
-        if os.path.exists('token.json'):
-            creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+        try:
+            # 1. Try environment variable (Render / production)
+            token_json = os.getenv("GOOGLE_TOKEN")
 
-        # Refresh or login
-        if not creds or not creds.valid:
+            if token_json:
+                creds_dict = json.loads(token_json)
+                creds = Credentials.from_authorized_user_info(
+                    creds_dict,
+                    SCOPES
+                )
+
+            # 2. Fallback to local token.json (development)
+            elif os.path.exists("token.json"):
+                creds = Credentials.from_authorized_user_file(
+                    "token.json",
+                    SCOPES
+                )
+
+            else:
+                raise Exception("No Gmail credentials found (env or local)")
+
+            #Refresh if expired
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
-            else:
-                creds_json = os.getenv("GOOGLE_CREDENTIALS")
 
-                if creds_json:
-                    creds_dict = json.loads(creds_json)
-                    flow = InstalledAppFlow.from_client_config(
-                        creds_dict, SCOPES
-                    )
-                else:
-                    raise Exception("Missing GOOGLE_CREDENTIALS env variable")
-                creds = flow.run_local_server(port=0)
+            logger.info("Gmail authentication successful")
 
-            with open('token.json', 'w') as token:
-                token.write(creds.to_json())
+            return build('gmail', 'v1', credentials=creds)
 
-        logger.info("Gmail authentication successful")
-        return build('gmail', 'v1', credentials=creds)
+        except Exception as e:
+            logger.error(f"Gmail authentication failed: {e}")
+            raise e
 
     def extract_body(self, payload):
         """Extract email body (handles multipart + plain text)"""
