@@ -3,6 +3,8 @@ from fastapi import FastAPI
 from app.services.gmail_service import GmailService
 from app.services.ai_service import AIService
 from app.services.calendar_service import CalendarService
+from app.core.db import init_db
+from app.utils.db_helper import is_email_processed, mark_email_processed
 
 
 app = FastAPI()
@@ -13,6 +15,7 @@ ai_service = AIService()
 
 calendar_service = CalendarService()
 
+init_db()
 
 @app.get("/")
 def root():
@@ -42,6 +45,10 @@ def process_emails():
     emails = gmail_service.fetch_emails()
     results=[]
     for email in emails:
+
+        #skipping already processed mails
+        if is_email_processed(email["id"]):
+            continue
         
         ai_raw = ai_service.analyze_email(
             email["subject"],
@@ -65,6 +72,9 @@ def process_emails():
                         ai_result["date"],
                         ai_result["time"]
                     )
+
+        #storing email id after processing
+        mark_email_processed(email["id"])
 
         results.append({
             "id":email["id"],
