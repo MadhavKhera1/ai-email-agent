@@ -32,9 +32,15 @@ class GmailClient:
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
             else:
-                flow = InstalledAppFlow.from_client_secrets_file(
-                    'credentials.json', SCOPES
-                )
+                creds_json = os.getenv("GOOGLE_CREDENTIALS")
+
+                if creds_json:
+                    creds_dict = json.loads(creds_json)
+                    flow = InstalledAppFlow.from_client_config(
+                        creds_dict, SCOPES
+                    )
+                else:
+                    raise Exception("Missing GOOGLE_CREDENTIALS env variable")
                 creds = flow.run_local_server(port=0)
 
             with open('token.json', 'w') as token:
