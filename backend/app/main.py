@@ -74,7 +74,8 @@ def run_email_agent():
                         f"📅 {ai_result['type'].capitalize()} Scheduled!\n"
                         f"Title: {ai_result['title']}\n"
                         f"Date: {ai_result['date']}\n"
-                        f"Time: {ai_result['time']}"
+                        f"Time: {ai_result['time']}\n"
+                        f"Confidence: {confidence}"
                     )
 
         mark_email_processed(email["id"])
