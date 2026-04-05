@@ -61,7 +61,8 @@ def run_email_agent():
             continue
 
         if isinstance(ai_result, dict):
-            if ai_result.get("type") in ["meeting", "interview"]:
+            confidence = ai_result.get("confidence", 1)  # fallback safe
+            if ai_result.get("type") in ["meeting", "interview"] and confidence >= 0.7:
                 if ai_result.get("date") and ai_result.get("time"):
                     calendar_service.create_event(
                         ai_result["title"],

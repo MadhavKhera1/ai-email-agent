@@ -38,18 +38,20 @@ class AIService:
 
     def analyze_email(self, subject, body):
         prompt = f"""
-        Analyze this email and return ONLY JSON:
+            Analyze the following email and extract structured information.
 
-        Subject: {subject}
-        Body: {body}
+            Subject: {subject}
+            Body: {body}
 
-        Output:
-        {{
-          "type": "meeting/interview/other",
-          "date": "YYYY-MM-DD or null",
-          "time": "HH:MM or null",
-          "title": "short summary"
-        }}
+            Return ONLY valid JSON in this exact format (no extra text, no explanation):
+
+            {{
+            "type": "meeting" or "interview" or "other",
+            "date": "YYYY-MM-DD or null",
+            "time": "HH:MM or null",
+            "title": "short summary",
+            "confidence": number between 0 and 1
+            }}
         """
 
         try:
