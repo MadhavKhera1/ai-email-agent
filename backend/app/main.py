@@ -8,6 +8,7 @@ from app.utils.db_helper import is_email_processed, mark_email_processed
 from contextlib import asynccontextmanager
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import Request
+from app.services.telegram_service import send_telegram_message
 
 gmail_service = GmailService()
 
@@ -66,6 +67,13 @@ def run_email_agent():
                         ai_result["title"],
                         ai_result["date"],
                         ai_result["time"]
+                    )
+
+                    send_telegram_message(
+                        f"📅 {ai_result['type'].capitalize()} Scheduled!\n"
+                        f"Title: {ai_result['title']}\n"
+                        f"Date: {ai_result['date']}\n"
+                        f"Time: {ai_result['time']}"
                     )
 
         mark_email_processed(email["id"])
