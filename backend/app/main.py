@@ -9,6 +9,7 @@ from contextlib import asynccontextmanager
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import Request
 from app.services.telegram_service import send_telegram_message
+from app.utils.db_helper import save_log
 
 gmail_service = GmailService()
 
@@ -77,6 +78,34 @@ def run_email_agent():
                         f"Time: {ai_result['time']}\n"
                         f"Confidence: {confidence}"
                     )
+
+                    save_log(
+                        email["id"],
+                        email["subject"],
+                        ai_result.get("type"),
+                        confidence,
+                        "scheduled"
+                    )
+
+                else:
+                    # Missing date/time → skip
+                    save_log(
+                        email["id"],
+                        email["subject"],
+                        ai_result.get("type"),
+                        confidence,
+                        "skipped_missing_data"
+                    )
+            else:
+                # Missing date/time → skip
+                save_log(
+                    email["id"],
+                    email["subject"],
+                    ai_result.get("type"),
+                    confidence,
+                    "skipped"
+                )
+
 
         mark_email_processed(email["id"])
 
