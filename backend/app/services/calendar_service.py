@@ -15,10 +15,22 @@ class CalendarService:
             credentials=self.gmail_client.service._http.credentials
         )
 
-    def create_event(self, title, date, time):
+    def create_event(self, title, date, time, email_id):
         try:
+            #Step 1: Check if event already exists
+            existing_events = self.service.events().list(
+                calendarId='primary',
+                q=email_id
+            ).execute()
+
+            if existing_events.get("items"):
+                logger.info(f"Event already exists for email_id: {email_id}, skipping...")
+                return None
+
+            #Step 2: Create event
             event = {
                 'summary': title,
+                "description": f"Created by AI Agent | Email ID: {email_id}",
                 'start': {
                     'dateTime': f"{date}T{time}:00+05:30",
                     'timeZone': 'Asia/Kolkata',

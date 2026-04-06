@@ -98,7 +98,8 @@ def run_email_agent():
                     calendar_service.create_event(
                         ai_result["title"],
                         ai_result["date"],
-                        ai_result["time"]
+                        ai_result["time"],
+                        email["id"]
                     )
 
                     send_telegram_message(
