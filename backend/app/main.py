@@ -79,6 +79,8 @@ def run_email_agent():
         if is_email_processed(email["id"]):
             continue
 
+        mark_email_processed(email["id"])
+
         ai_raw = ai_service.analyze_email(
             email["subject"],
             email["body"]
@@ -134,9 +136,6 @@ def run_email_agent():
                     "skipped"
                 )
 
-
-        mark_email_processed(email["id"])
-
 @app.api_route("/", methods=["GET", "HEAD"])
 def root(request: Request):
     return {"message": "AI Email Agent Running"}
@@ -169,6 +168,9 @@ def process_emails():
         #skipping already processed mails
         if is_email_processed(email["id"]):
             continue
+
+        #storing email id after processing
+        mark_email_processed(email["id"])
         
         ai_raw = ai_service.analyze_email(
             email["subject"],
@@ -192,9 +194,6 @@ def process_emails():
                         ai_result["date"],
                         ai_result["time"]
                     )
-
-        #storing email id after processing
-        mark_email_processed(email["id"])
 
         results.append({
             "id":email["id"],
