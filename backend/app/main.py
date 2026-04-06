@@ -31,6 +31,34 @@ def start_scheduler():
     scheduler.add_job(safe_run, "interval", minutes=3)
     scheduler.start()
 
+def get_logs_from_db():
+    from app.core.db import get_connection
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT email_id, subject, type, confidence, action, created_at
+        FROM logs
+        ORDER BY created_at DESC
+    """)
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    logs = []
+    for row in rows:
+        logs.append({
+            "email_id": row[0],
+            "subject": row[1],
+            "type": row[2],
+            "confidence": row[3],
+            "action": row[4],
+            "created_at": row[5]
+        })
+
+    return logs
+
 @asynccontextmanager
 async def lifespan(app):
     print("Starting scheduler...")
@@ -179,4 +207,11 @@ def process_emails():
     return{
         "processed":len(results),
         "results":results
+    }
+
+@app.get("/logs")
+def get_logs():
+    return {
+        "count": len(get_logs_from_db()),
+        "logs": get_logs_from_db()
     }
