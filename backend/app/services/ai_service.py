@@ -74,3 +74,23 @@ class AIService:
             except Exception as fallback_error:
                 logger.error(f"AI failed completely: {fallback_error}")
                 return None
+            
+    def generate_reply(self, subject, body):
+        prompt = f"""
+        You are a professional assistant.
+
+        Write a polite email reply for the following email.
+
+        Keep it short and professional.
+
+        Email Subject: {subject}
+        Email Body: {body}
+
+        Reply:
+        """
+
+        try:
+            response = self.model.generate_content(prompt)
+            return response.text
+        except Exception as e:
+            return "Thank you for your email. I will get back to you soon."  
