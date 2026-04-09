@@ -78,11 +78,16 @@ class AIService:
     def generate_reply(self, subject, body, email_type):
         if email_type == "interview":
             prompt = f"""
-            You are a professional job candidate.
+            You are a job candidate replying to an interview invitation.
 
-            Write a polite confirmation reply for an interview invitation.
+            Write a polite and professional confirmation email.
 
-            Keep it short and professional.
+            Include:
+            - Thank them for the opportunity
+            - Confirm your availability
+            - Express enthusiasm
+
+            Keep it short (4 to 5 lines).
 
             Email Subject: {subject}
             Email Body: {body}
@@ -92,11 +97,15 @@ class AIService:
 
         elif email_type == "meeting":
             prompt = f"""
-            You are a professional employee.
+            You are a professional employee replying to a meeting invitation.
 
-            Write a polite acknowledgement reply for a meeting invitation.
+            Write a polite acknowledgement email.
 
-            Keep it short and professional.
+            Include:
+            - Confirmation of meeting
+            - Professional tone
+
+            Keep it short (3–4 lines).
 
             Email Subject: {subject}
             Email Body: {body}
@@ -111,4 +120,4 @@ class AIService:
             response = self.model.generate_content(prompt)
             return response.text
         except Exception:
-            return "Thank you for your email. I will get back to you soon."
+            return None
