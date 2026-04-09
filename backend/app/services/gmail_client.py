@@ -14,6 +14,7 @@ logger = get_logger("GMAIL_CLIENT")
 
 SCOPES = [
     'https://www.googleapis.com/auth/gmail.readonly',
+    'https://www.googleapis.com/auth/gmail.compose',
     'https://www.googleapis.com/auth/calendar'
 ]
 
@@ -25,38 +26,42 @@ class GmailClient:
     def authenticate(self):
         creds = None
 
-        try:
-            # 1. Try environment variable (Render / production)
-            token_json = os.getenv("GOOGLE_TOKEN")
+        # Step 1: Load token if exists
+        if os.path.exists('token.json'):
+            creds = Credentials.from_authorized_user_file('token.json', SCOPES)
 
-            if token_json:
-                creds_dict = json.loads(token_json)
-                creds = Credentials.from_authorized_user_info(
-                    creds_dict,
-                    SCOPES
-                )
-
-            # 2. Fallback to local token.json (development)
-            elif os.path.exists("token.json"):
-                creds = Credentials.from_authorized_user_file(
-                    "token.json",
-                    SCOPES
-                )
-
-            else:
-                raise Exception("No Gmail credentials found (env or local)")
-
-            #Refresh if expired
+        # Step 2: Refresh or re-login
+        if not creds or not creds.valid:
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
+            else:
+                creds_json = os.getenv("GOOGLE_CREDENTIALS")
 
-            logger.info("Gmail authentication successful")
+                if creds_json:
+                    # 🌐 For Render (production)
+                    creds_dict = json.loads(creds_json)
+                    flow = InstalledAppFlow.from_client_config(
+                        creds_dict, SCOPES
+                    )
 
-            return build('gmail', 'v1', credentials=creds)
+                elif os.path.exists("credentials.json"):
+                    # 💻 For local development
+                    flow = InstalledAppFlow.from_client_secrets_file(
+                        "credentials.json", SCOPES
+                    )
 
-        except Exception as e:
-            logger.error(f"Gmail authentication failed: {e}")
-            raise e
+                else:
+                    raise Exception("No Gmail credentials found (env or local)")
+
+                # 🔥 This will open browser
+                creds = flow.run_local_server(port=0)
+
+            # Save new token
+            with open('token.json', 'w') as token:
+                token.write(creds.to_json())
+
+        print("Gmail authentication successful")
+        return build('gmail', 'v1', credentials=creds)
 
     def extract_body(self, payload):
         """Extract email body (handles multipart + plain text)"""

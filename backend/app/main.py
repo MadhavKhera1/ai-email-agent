@@ -118,6 +118,21 @@ def run_email_agent():
                         "scheduled"
                     )
 
+                    # Generate reply
+                    reply_text = ai_service.generate_reply(
+                        email["subject"],
+                        email["body"],
+                        ai_result.get("type")
+                    )
+
+                    # Create Gmail draft
+                    if reply_text:
+                        gmail_service.create_draft(
+                            email["sender"],
+                            email["subject"],
+                            reply_text
+                        )
+
                 else:
                     # Missing date/time → skip
                     save_log(
