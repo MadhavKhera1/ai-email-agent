@@ -24,45 +24,41 @@ class GmailClient:
         self.service = self.authenticate()
 
     def authenticate(self):
-        creds = None
+        try:
+            creds = None
 
-        # Step 1: Load token if exists
-        if os.path.exists('token.json'):
-            creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+            token_json = os.getenv("GOOGLE_TOKEN")
 
-        # Step 2: Refresh or re-login
-        if not creds or not creds.valid:
+            # PRODUCTION (Render)
+            if token_json:
+                creds_dict = json.loads(token_json)
+                creds = Credentials.from_authorized_user_info(creds_dict, SCOPES)
+
+            # LOCAL (fallback)
+            else:
+                if os.path.exists("token.json"):
+                    creds = Credentials.from_authorized_user_file("token.json", SCOPES)
+
+            # Refresh if expired
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
-            else:
-                creds_json = os.getenv("GOOGLE_CREDENTIALS")
 
-                if creds_json:
-                    # 🌐 For Render (production)
-                    creds_dict = json.loads(creds_json)
-                    flow = InstalledAppFlow.from_client_config(
-                        creds_dict, SCOPES
-                    )
-
-                elif os.path.exists("credentials.json"):
-                    # 💻 For local development
-                    flow = InstalledAppFlow.from_client_secrets_file(
-                        "credentials.json", SCOPES
-                    )
-
-                else:
-                    raise Exception("No Gmail credentials found (env or local)")
-
-                # 🔥 This will open browser
+            # If still no creds → LOCAL LOGIN
+            if not creds:
+                flow = InstalledAppFlow.from_client_secrets_file(
+                    "credentials.json", SCOPES
+                )
                 creds = flow.run_local_server(port=0)
 
-            # Save new token
-            with open('token.json', 'w') as token:
-                token.write(creds.to_json())
+                with open("token.json", "w") as token:
+                    token.write(creds.to_json())
 
-        print("Gmail authentication successful")
-        return build('gmail', 'v1', credentials=creds)
+            logger.info("Gmail authentication successful")
+            return build("gmail", "v1", credentials=creds)
 
+        except Exception as e:
+            logger.error(f"Gmail authentication failed: {e}")
+            raise e
     def extract_body(self, payload):
         """Extract email body (handles multipart + plain text)"""
         body = ""
