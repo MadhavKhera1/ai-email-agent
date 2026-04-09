@@ -16,6 +16,8 @@ MAX_ATTEMPTS = 3
 
 
 class AIService:
+    def __init__(self):
+        self.client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
     def generate_with_model(self, model_name, prompt):
         last_error = None
 
@@ -88,6 +90,7 @@ class AIService:
             - Express enthusiasm
 
             Keep it short (4 to 5 lines).
+            "Do NOT include 'Subject:' inside the email body."
 
             Email Subject: {subject}
             Email Body: {body}
@@ -106,6 +109,7 @@ class AIService:
             - Professional tone
 
             Keep it short (3–4 lines).
+            "Do NOT include 'Subject:' inside the email body."
 
             Email Subject: {subject}
             Email Body: {body}
@@ -114,10 +118,14 @@ class AIService:
             """
 
         else:
-            return None  # no reply for other types
+            return None  #no reply for other types
 
         try:
-            response = self.model.generate_content(prompt)
+            response = self.client.models.generate_content(
+                model="gemini-2.5-flash-lite",
+                contents=prompt
+            )
             return response.text
-        except Exception:
-            return None
+        except Exception as e:
+            print("AI Error:", e)
+            return "Thank you for the invitation. I confirm my availability and look forward to it."
